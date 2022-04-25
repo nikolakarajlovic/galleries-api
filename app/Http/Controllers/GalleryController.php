@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Requests\CreateGalleryRequest;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\StoreGalleryRequest;
 use App\Http\Requests\UpdateGalleryRequest;
 use App\Models\Gallery;
+
 
 class GalleryController extends Controller
 {
@@ -16,22 +18,17 @@ class GalleryController extends Controller
      */
     public function index(Request $request)
     {
-        $title = $request->query('title');
-        $description = $request->query('description');
-
-        $query = Gallery::query();
-
-        if ($title) {
-            $query = $query->where('title', '+', "%$title%");
+        $$filter = $request->query('filter');
+        $query = Gallery::with('user', 'images');
+        if ($filter) {
+            $query = $query->where('name', 'like', "%$filter%")
+                ->orWhere('description', 'like', "%$filter%")
+                ->orWhereHas('user', function ($q) use ($filter) {
+                    $q->where('first_name', 'like', "%$filter%")
+                        ->orWhere('last_name', 'like', "%$filter%");
+                });
         }
-        if ($description) {
-            $query = $query->where('description', 'like', "%$description%");
-        }
-
-        $galleries = $query->paginate(
-            $request->query('per_page', 10) // page size
-        );
-
+        $galleries = $query->orderBy('created_at', 'desc')->paginate(10);
         return response()->json($galleries);
     }
     /**
@@ -40,12 +37,14 @@ class GalleryController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(CreateGalleryRequest $request)
+    public function store(StoreGalleryRequest $request)
     {
-        $data = $request->validated();
-
-        $gallery = Gallery::create($data);
-
+        $gallery = Auth::user()->galleries()->create($request->validated());
+        foreach ($request->images as $images) {
+            $image_url = $images['image_url'];
+            $gallery->images()->create(compact('image_url'));
+        }
+        $gallery->images;
         return response()->json($gallery);
     }
 
@@ -57,6 +56,7 @@ class GalleryController extends Controller
      */
     public function show(Gallery $gallery)
     {
+        $gallery->load('user', 'images', 'comments', 'comments.user');
         return response()->json($gallery);
     }
 
@@ -69,10 +69,16 @@ class GalleryController extends Controller
      */
     public function update(UpdateGalleryRequest $request, Gallery $gallery)
     {
-        $data = $request->validated();
-
-        $gallery->update($data);
-
+        $gallery->update($request->validated());
+        if ($request->images) {
+            $gallery->images()->delete();
+            foreach ($request->images as $images) {
+                $image_url = $images['image_url'];
+                $gallery->images()->create(compact('image_url'));
+            }
+            info($gallery->images()->get());
+        }
+        $gallery = $gallery->load('user', 'images');
         return response()->json($gallery);
     }
 
@@ -85,6 +91,19 @@ class GalleryController extends Controller
     public function destroy(Gallery $gallery)
     {
         $gallery->delete();
+        $gallery->images()->delete();
         return response(null, 204);
+    }
+
+    public function myGalleries(Request $request)
+    {
+        $filter = $request->query('filter');
+        $query = Auth::user()->galleries()->with('user', 'images');
+
+        if ($filter) {
+            $query = $query->where('name', 'like', "%$filter%")->orWhere('description', 'like', "%$filter%")->orWhere("description", 'like', "%$filter%");
+        }
+        $galleries = $query->orderBy('created_at', 'desc')->paginate(10);
+        return response()->json($galleries);
     }
 }

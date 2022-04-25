@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class UpdateGalleryRequest extends FormRequest
 {
@@ -13,7 +14,8 @@ class UpdateGalleryRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        $gallery = $this->route('gallery');
+        return $gallery->user_id == Auth::id();
     }
 
     /**
@@ -23,9 +25,12 @@ class UpdateGalleryRequest extends FormRequest
      */
     public function rules()
     {
+
         return [
-            'title' => 'sometimes|string|min:2|max:255',
-            'description' => 'string|max:1000'
+            'title' => 'sometimes|min:2|max:255',
+            'description' => 'string|max:1000|nullable',
+            'images' => 'sometimes|array',
+            'images.*.image_url' => 'sometimes|url|ends_with:png,jpg,jpeg'
         ];
     }
 }

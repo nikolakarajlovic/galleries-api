@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\GalleryController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -19,8 +22,17 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-
-Route::post('login', [AuthController::class, 'login']);
-Route::post('register', [AuthController::class, 'register']);
+Route::post('register', [AuthController::class, 'register'])->middleware('quest');
+Route::post('login', [AuthController::class, 'login'])->middleware('quest');
 Route::post('logout', [AuthController::class, 'logout'])->middleware('auth');
-Route::get('my-gallery', [AuthController::class, 'getMyGallery'])->middleware('auth');
+
+Route::get('/galleries', [GalleryController::class, 'index']);
+Route::get('/authors/{user_id}', [UserController::class, 'userGalleries']);
+Route::get('/galleries/{gallery}', [GalleryController::class, 'show']);
+Route::get('my-galleries', [AuthController::class, 'myGalleries'])->middleware('auth');
+Route::post('/galleries', [GalleryController::class, 'store'])->middleware('auth');
+Route::put('/galleries/{gallery}', [GalleryController::class, 'update'])->middleware('auth');
+Route::delete('/galleries/{gallery}', [GalleryController::class, 'destroy'])->middleware('auth');
+Route::get('/my-profile', [AuthController::class, 'myProfile'])->middleware('auth');
+Route::post('/comments/{gallery}', [CommentController::class, 'store'])->middleware('auth');
+Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->middleware('auth');

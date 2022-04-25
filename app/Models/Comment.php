@@ -5,13 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Gallery extends Model
+class Comment extends Model
 {
     use HasFactory;
-
     protected $fillable = [
-        'title',
-        'description',
+        'content',
+        'gallery_id',
+        'user_id',
     ];
 
     public function user()
@@ -19,13 +19,8 @@ class Gallery extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function images()
+    public function gallery()
     {
-        return $this->hasMany(Image::class);
-    }
-
-    public function comments()
-    {
-        return $this->hasMany(Comment::class);
+        return $this->belongsTo(Gallery::class);
     }
 }
