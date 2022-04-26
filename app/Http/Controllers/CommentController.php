@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCommentRequest;
+use App\Http\Requests\UpdateCommentRequest;
 use App\Models\Comment;
 use App\Models\Gallery;
 use Illuminate\Http\Request;
@@ -44,8 +45,10 @@ class CommentController extends Controller
      * @param  \App\Models\Comment  $comment
      * @return \Illuminate\Http\Response
      */
-    public function show(Comment $comment)
+    public function show(Gallery $gallery)
     {
+        $galleryComments = Comment::with('user')->where('gallery_id', $gallery->id)->get();
+        return response()->json($galleryComments);
     }
 
     /**
@@ -55,9 +58,15 @@ class CommentController extends Controller
      * @param  \App\Models\Comment  $comment
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Comment $comment)
+    public function update(UpdateCommentRequest $request)
     {
-        //
+        $data = $request->validated();
+        $commentToUpdate = Comment::findOrFail($data['id']);
+
+        $commentToUpdate->body = $data['body'];
+        $commentToUpdate->save();
+
+        return response()->json($commentToUpdate);
     }
 
     /**

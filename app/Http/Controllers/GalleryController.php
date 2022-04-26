@@ -24,8 +24,8 @@ class GalleryController extends Controller
             $query = $query->where('name', 'like', "%$filter%")
                 ->orWhere('description', 'like', "%$filter%")
                 ->orWhereHas('user', function ($q) use ($filter) {
-                    $q->where('first_name', 'like', "%$filter%")
-                        ->orWhere('last_name', 'like', "%$filter%");
+                    $q->where('firstname', 'like', "%$filter%")
+                        ->orWhere('lastname', 'like', "%$filter%");
                 });
         }
         $galleries = $query->orderBy('created_at', 'desc')->paginate(10);

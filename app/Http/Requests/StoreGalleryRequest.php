@@ -30,4 +30,13 @@ class StoreGalleryRequest extends FormRequest
             'images.*.image_url' => 'required|url|ends_with:png,jpg,jpeg'
         ];
     }
+
+    public function messages()
+    {
+        return [
+            'images.*.image_url.ends_with' => 'Image must be of a png, jpg or jpeg format',
+            'images.*.image_url.url' => 'Image must be a valid url',
+            'images.*.image_url.required' => 'Image field must not be empty',
+        ];
+    }
 }

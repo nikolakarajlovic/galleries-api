@@ -31,4 +31,11 @@ class RegisterRequest extends FormRequest
             'terms_and_conditions' => 'accepted'
         ];
     }
+
+    public function messages()
+    {
+        return [
+            'password.regex' => 'Password must contain at least one number',
+        ];
+    }
 }
